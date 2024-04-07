@@ -1,0 +1,2 @@
+PMOD 1 => micro SD card + adapter
+PMOD 2 =>
