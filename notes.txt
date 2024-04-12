@@ -1,2 +1,21 @@
-PMOD 1 => micro SD card + adapter
-PMOD 2 =>
+PMOD 0 => micro SD card + adapter
+PMOD 1, 2 => DVI connector
+
+--- STEP 1: BUILD THE BOARD ---
+1. CLOCK
+- Add HDMI and HDMI 5x clock domain
+- instantiate MMCM
+    buf divide by 4 to get sys_clk
+    two clocks output:
+    HDMI: 25MHz
+    HDMI 5x: 125MHz
+
+2. add extension: DVI connection
+- _dvi_pmod_io instantiated using 2 pmod ports
+- clock domain: HDMI
+- add a frame buffer
+    640x480 @75Hz
+    match res and freq of target. doom software has these kind of hard-coded in
+
+--- STEP 2: BUILD THE SW ---
+
