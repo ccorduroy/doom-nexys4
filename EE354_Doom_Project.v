@@ -33,19 +33,47 @@ module Doom_top(
 	
     wire Reset;
     assign Reset=BtnC;
-    //wire bright;
-    wire left,right;
-    //wire [3:0] anode;
-    //wire [11:0] rgb;
-    //wire rst;
+    
+	// NOTE: Need to assign start signal to some trigger for the game to run/trigger enemy spawns
+	wire start;
     
     reg [3:0]   SSD;
-    wire [3:0]  SSD3, SSD2, SSD1, SSD0;
+	
+	// SSD0 shows the camera state (forward, left, right)
+	// SSD4 shows the weapon state (loaded or empty)
+	// SSDs 2-4 show if an enemy is present at a direction (Will show capital E for enemy)
+	// SSD3 shows left, SSD2 shows forward, and SSD1 shows right
+	// Additional wire variables for SSDs 1-4 are not created as they are hard coded later on
+    wire [3:0]  SSD0;
+	
     reg [7:0]   SSD_CATHODES;
-    wire [1:0]  ssdscan_clk;
+    wire [2:0]  ssdscan_clk;
+	
+	// For camera_view: Forward = 3'b001, Left = 3'b011, and Right = 3'b1100
+	// Intermediate state codes can be found in camera_controller.v
 	wire [2:0] camera_view;
 	
+	// For weapon_state: Loaded = 3'b001, Firing(Shooting) = 3'b010, and Idle(waiting for reload) = 3'b100
+	wire [2:0] weapon_state;
+	
+	// NOTE: This enemy_state variable is not very useful, it will only indicate if the state machine is idle or actively running enemy spawns
+	wire [2:0] enemy_state;
+	
+	// These flags indicate if there is an enemy in the respective direction
+	wire forward_enemy_flag;
+	wire left_enemy_flag;
+	wire right_enemy_flag;
+	
+	// This variable will be active for one clock to indicate that an enemy from any direction has attacked the player
+	wire enemy_attack;
+	
+	
+	
+	// This slow clock is roughly 3Hz and is used for enemy timers
 	reg [27:0]  DIV_CLK;
+	assign slow_clk = DIV_CLK[24];
+	
+	
     always @ (posedge ClkPort, posedge Reset)  
     begin : CLOCK_DIVIDER
       if (Reset)
@@ -61,9 +89,29 @@ module Doom_top(
 		.rightB(BtnR),
 		.camera_view(camera_view)
 	);
-    //display_stuff dc(.clk(ClkPort), .hSync(hSync), .vSync(vSync), .bright(bright), .hCount(hc), .vCount(vc));
-    //dinno_controller sc(.clk(move_clk),.mast_Clk(ClkPort),.bright(bright),.rst(BtnC),.left(Sw1),.right(Sw0),.hCount(hc),.vCount(vc),.rgb(rgb),.background(background),.start(BtnU));   
-    //asteriod_controller sc1(.clk(move_clk), .mastClk(ClkPort), .bright(bright), .rst(BtnC),.hCount(hc), .vCount(vc), .rgb(rgb2));   
+	
+	weapon_controller sc1(
+		.clk(ClkPort),
+		.rst(BtnC),
+		.in_switch(Sw15),
+		.weapon_state(weapon_state)
+	);
+	
+	enemy_controller sc2(
+		.clk(ClkPort),
+		.slow_clk(slow_clk),
+		.rst(BtnC),
+		.start(start),
+		.fire_state(weapon_state),
+		.camera_view(camera_view),
+		.enemy_state(enemy_state),
+		.forward_enemy_flag(forward_enemy_flag),
+		.left_enemy_flag(left_enemy_flag),
+		.right_enemy_flag(right_enemy_flag),
+		.enemy_attack(enemy_attack)
+	);
+	
+  
 
 
 
@@ -73,8 +121,8 @@ module Doom_top(
     //assign vgaB = rgb[3  : 0];
     
     // disable mamory ports
-    //assign {MemOE, MemWR, RamCS, QuadSpiFlashCS} = 4'b1111;
-    assign QuadSpiFlashCS = 1'b1;
+    assign {MemOE, MemWR, RamCS, QuadSpiFlashCS} = 4'b1111;
+    //assign QuadSpiFlashCS = 1'b1;
     
     //------------
 // SSD (Seven Segment Display)
@@ -112,27 +160,55 @@ module Doom_top(
     //
 
 
-    assign ssdscan_clk = DIV_CLK[19:18];
-    assign An0  = !(~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 00
-	
-	
-    //assign An1  = !(~(ssdscan_clk[1]) &&  (ssdscan_clk[0]));  // when ssdscan_clk = 01
-    //assign An2  =  !((ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 10
-    //assign An3  =  !((ssdscan_clk[1]) &&  (ssdscan_clk[0]));  // when ssdscan_clk = 11
-    // Turn off another 7 anodes
-	
-    assign {An7, An6, An5, An4, An3, An2, An1} = 7'b1111111;
+    assign ssdscan_clk = DIV_CLK[19:17];
+    assign An0  = !(~(ssdscan_clk[2]) && (~(ssdscan_clk[1]) && ~(ssdscan_clk[0])));  // when ssdscan_clk = 000
+	assign An1  = !(~(ssdscan_clk[2]) && (~(ssdscan_clk[1]) && (ssdscan_clk[0])));   // when ssdscan_clk = 001
+	assign An2  = !(~(ssdscan_clk[2]) &&  (ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 010
+	assign An3  = !(~(ssdscan_clk[2]) &&  (ssdscan_clk[1]) &&  (ssdscan_clk[0]));  // when ssdscan_clk = 011
+	assign An4  = !( (ssdscan_clk[2]) && ~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 100
+
+    // Turn off another 3 anodes
+    assign {An7, An6, An5} = 3'b111;
 	
 	
 
-   // always @ (ssdscan_clk, SSD0, SSD1, SSD2, SSD3)
     always @ (ssdscan_clk, SSD0)
     begin : SSD_SCAN_OUT
         case (ssdscan_clk) 
-                  2'b00: SSD = SSD0;
-                  //2'b01: SSD = SSD1;
-                  //2'b10: SSD = SSD2;
-                  //2'b11: SSD = SSD3;
+                  3'b000: SSD = SSD0; // Covers camera view
+				  3'b001: 
+						begin
+							if (right_enemy_flag == 1)
+								SSD = 3'b111;
+							else 
+								SSD = 3'b000;
+						end
+				  3'b010: 
+						begin
+							if (forward_enemy_flag == 1)
+								SSD = 3'b111;
+							else 
+								SSD = 3'b000;
+						end
+				  3'b011:
+						begin
+							if (left_enemy_flag == 1)
+								SSD = 3'b111;
+							else 
+								SSD = 3'b000;
+						end
+				  3'b100:
+						begin
+							if (weapon_state == 3'b001)
+								SSD = 3'b011; // Represents loaded state
+							else 
+								begin
+									if (weapon_state == 3'b100)
+										SSD = 3'b111; // Represents idle/empty state
+									else 
+										SSD = 3'b000;
+								end
+						end
         endcase 
     end
 
@@ -141,8 +217,10 @@ module Doom_top(
     begin : HEX_TO_SSD
         case (SSD)
 			3'b001: SSD_CATHODES = 8'b01110001; // F for Forward
-			3'b010: SSD_CATHODES = 8'b11100011; // L for Left
-			3'b100: SSD_CATHODES = 8'b11110101; // r for Right
+			3'b011: SSD_CATHODES = 8'b11100011; // L for Left
+			3'b110: SSD_CATHODES = 8'b11110101; // r for Right
+			3'b111: SSD_CATHODES = 8'b01100001; // E for Enemy or Empty
+			3'b000: SSD_CATHODES = 8'b11111111; // Blank space to represent no enemy
 			
             default: SSD_CATHODES = 8'bXXXXXXXX; // default is not needed as we covered all cases
         endcase

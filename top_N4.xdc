@@ -41,28 +41,28 @@ set_property PACKAGE_PIN V6 [get_ports {Sw6}]
 set_property PACKAGE_PIN V5 [get_ports {Sw7}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw7}]
 #Bank = 34, Pin name = IO_L8P_T1-34,						Sch name = Sw8
-#set_property PACKAGE_PIN U4 [get_ports {Sw8}]					
+set_property PACKAGE_PIN U4 [get_ports {Sw8}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw8}]
 #Bank = 34, Pin name = IO_L9N_T1_DQS_34,					Sch name = Sw9
-#set_property PACKAGE_PIN V2 [get_ports {Sw9}]					
+set_property PACKAGE_PIN V2 [get_ports {Sw9}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw9}]
 #Bank = 34, Pin name = IO_L9P_T1_DQS_34,					Sch name = Sw10
-#set_property PACKAGE_PIN U2 [get_ports {Sw10}]					
+set_property PACKAGE_PIN U2 [get_ports {Sw10}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw10}]
 #Bank = 34, Pin name = IO_L11N_T1_MRCC_34,					Sch name = Sw11
 set_property PACKAGE_PIN T3 [get_ports {Sw11}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw11}]
 #Bank = 34, Pin name = IO_L17N_T2_34,						Sch name = Sw12
-#set_property PACKAGE_PIN T1 [get_ports {Sw12}]					
+set_property PACKAGE_PIN T1 [get_ports {Sw12}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw12}]
 #Bank = 34, Pin name = IO_L11P_T1_SRCC_34,					Sch name = Sw13
-#set_property PACKAGE_PIN R3 [get_ports {Sw13}]					
+set_property PACKAGE_PIN R3 [get_ports {Sw13}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw13}]
 #Bank = 34, Pin name = IO_L14N_T2_SRCC_34,					Sch name = Sw14
-#set_property PACKAGE_PIN P3 [get_ports {Sw14}]					
+set_property PACKAGE_PIN P3 [get_ports {Sw14}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw14}]
 #Bank = 34, Pin name = IO_L14P_T2_SRCC_34,					Sch name = Sw15
-#set_property PACKAGE_PIN P4 [get_ports {Sw15}]					
+set_property PACKAGE_PIN P4 [get_ports {Sw15}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {Sw15}]
  
 
