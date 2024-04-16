@@ -34,7 +34,7 @@ module weapon_controller(
             case(weapon_state)
                 Loaded:
                     begin
-                        if (in_switch)
+                        if (!in_switch)
                             weapon_state <= Firing;
                     end
 				Firing: // Only in firing state for one clock to signal animation and update enemy health
@@ -43,7 +43,7 @@ module weapon_controller(
                     end
                 Fire_Idle:
                     begin
-                        if (!in_switch)
+                        if (in_switch)
 							weapon_state <= Loaded;
                     end 
 

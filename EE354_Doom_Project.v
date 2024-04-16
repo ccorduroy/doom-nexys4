@@ -36,15 +36,16 @@ module Doom_top(
     
 	// NOTE: Need to assign start signal to some trigger for the game to run/trigger enemy spawns
 	wire start;
+	assign start = BtnD;
     
-    reg [3:0]   SSD;
+    reg [2:0]   SSD;
 	
 	// SSD0 shows the camera state (forward, left, right)
 	// SSD4 shows the weapon state (loaded or empty)
 	// SSDs 2-4 show if an enemy is present at a direction (Will show capital E for enemy)
 	// SSD3 shows left, SSD2 shows forward, and SSD1 shows right
 	// Additional wire variables for SSDs 1-4 are not created as they are hard coded later on
-    wire [3:0]  SSD0;
+    wire [2:0]  SSD0, SSD1, SSD2, SSD3;
 	
     reg [7:0]   SSD_CATHODES;
     wire [2:0]  ssdscan_clk;
@@ -69,9 +70,9 @@ module Doom_top(
 	
 	
 	
-	// This slow clock is roughly 3Hz and is used for enemy timers
+	// This slow clock is roughly 100Hz and is used for enemy timers
 	reg [27:0]  DIV_CLK;
-	assign slow_clk = DIV_CLK[24];
+	assign slow_clk = DIV_CLK[19];
 	
 	
     always @ (posedge ClkPort, posedge Reset)  
@@ -91,7 +92,7 @@ module Doom_top(
 	);
 	
 	weapon_controller sc1(
-		.clk(ClkPort),
+		.clk(slow_clk),
 		.rst(BtnC),
 		.in_switch(Sw15),
 		.weapon_state(weapon_state)
@@ -136,6 +137,7 @@ module Doom_top(
     //assign SSD1 = background[7:4];
     //assign SSD0 = background[3:0];
 	assign SSD0 = camera_view;
+	assign SSD1 = {right_enemy_flag, 0, 0};
 
 
     // need a scan clk for the seven segment display 
