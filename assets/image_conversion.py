@@ -92,6 +92,7 @@ def generate(name, rem_x=-1, rem_y=-1):
 
 
 # generate rom from full bitmap image for all images
-generate("titlescreen.png")
-generate("shotgun.png")
-generate("shoot1.png")
+generate("bgf.png")
+generate("bgl.png")
+generate("bgr.png")
+generate("enemy.png")

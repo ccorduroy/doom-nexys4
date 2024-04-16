@@ -119,6 +119,7 @@ module Doom_top(
 		.slow_clk(slow_clk),
 		.camera_view(camera_view),
 		.weapon_state(weapon_state),
+		.enemy_state(enemy_state),
 		.forward_enemy_flag(forward_enemy_flag),
 		.left_enemy_flag(left_enemy_flag),
 		.right_enemy_flag(right_enemy_flag),
