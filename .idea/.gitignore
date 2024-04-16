@@ -1,6 +1,8 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+/.idea
+# not sure if the above works...
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -8,6 +10,10 @@
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/**/discord.xml
+.idea/**/misc.xml
+.idea/**/vcs.xml
+.idea/**/modules.xml
 
 # CMake
 cmake-build-*/

@@ -82,7 +82,8 @@ module Doom_top(
       else
             DIV_CLK <= DIV_CLK + 1'b1;
     end
-	
+
+	// other relevant files and their referenced variables
 	camera_controller sc(
 		.clk(ClkPort),
 		.rst(BtnC),
@@ -111,15 +112,29 @@ module Doom_top(
 		.right_enemy_flag(right_enemy_flag),
 		.enemy_attack(enemy_attack)
 	);
+
+	rendering_controller sc3(
+		.clk(ClkPort),
+		.start(start),
+		.slow_clk(slow_clk),
+		.camera_view(camera_view),
+		.weapon_state(weapon_state),
+		.forward_enemy_flag(forward_enemy_flag),
+		.left_enemy_flag(left_enemy_flag),
+		.right_enemy_flag(right_enemy_flag),
+		.bright(bright),
+		.hCount(hCount),
+		.vCount(vCount)
+	);
+
+	display_controller sc4(
+		.clk(ClkPort)
+	);
 	
-  
-
-
-
-    
-    //assign vgaR = rgb[11 : 8];
-    //assign vgaG = rgb[7  : 4];
-    //assign vgaB = rgb[3  : 0];
+	// VGA RGB assignments
+    assign vgaR = rgb[11 : 8];
+    assign vgaG = rgb[7  : 4];
+    assign vgaB = rgb[3  : 0];
     
     // disable mamory ports
     assign {MemOE, MemWR, RamCS, QuadSpiFlashCS} = 4'b1111;
@@ -172,8 +187,8 @@ module Doom_top(
     // Turn off another 3 anodes
     assign {An7, An6, An5} = 3'b111;
 	
-	
 
+	// SSD controller
     always @ (ssdscan_clk, SSD0)
     begin : SSD_SCAN_OUT
         case (ssdscan_clk) 
@@ -248,4 +263,4 @@ module Doom_top(
             //4'b1110: SSD_CATHODES = 8'b01100000; // E
             //4'b1111: SSD_CATHODES = 8'b01110000; // F
 
-endmodule
+endmodule : Doom_top
