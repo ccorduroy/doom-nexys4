@@ -1,4 +1,7 @@
-
+// EE 354 Final Project: DOOM Mini?
+// cr:
+// Victor Gutierrez <vagutier@usc.edu> --> RTL/OFL
+// Caitlin Sullivan <ccsulliv@usc.edu> --> OFL/rendering
 
 `timescale 1ns / 1ps
 
@@ -22,7 +25,9 @@ module Doom_top(
     
 	// Can comment these out when using testbench
     output MemOE, MemWR, RamCS,
-    output  QuadSpiFlashCS
+    output QuadSpiFlashCS,
+	output hSync, vSync,
+	output [3:0] vgaR, vgaG, vgaB
 	
 	// Only use this for testbench purposes
 	//output wire[2:0] camera_view
@@ -39,6 +44,9 @@ module Doom_top(
 	assign start = BtnD;
     
     reg [2:0]   SSD;
+
+	// VGA control variables
+	wire [11:0] rgb;
 	
 	// SSD0 shows the camera state (forward, left, right)
 	// SSD4 shows the weapon state (loaded or empty)
@@ -116,7 +124,7 @@ module Doom_top(
 	rendering_controller sc3(
 		.clk(ClkPort),
 		.start(start),
-		.slow_clk(slow_clk),
+		//.slow_clk(slow_clk),
 		.camera_view(camera_view),
 		.weapon_state(weapon_state),
 		.enemy_state(enemy_state),
@@ -125,11 +133,13 @@ module Doom_top(
 		.right_enemy_flag(right_enemy_flag),
 		.bright(bright),
 		.hCount(hCount),
-		.vCount(vCount)
+		.vCount(vCount),
+		.rgb(rgb),
 	);
 
 	display_controller sc4(
-		.clk(ClkPort)
+		.clk(ClkPort),
+		.rgb(rgb),
 	);
 	
 	// VGA RGB assignments
@@ -179,16 +189,15 @@ module Doom_top(
 
 
     assign ssdscan_clk = DIV_CLK[19:17];
-    assign An0  = !(~(ssdscan_clk[2]) && (~(ssdscan_clk[1]) && ~(ssdscan_clk[0])));  // when ssdscan_clk = 000
-	assign An1  = !(~(ssdscan_clk[2]) && (~(ssdscan_clk[1]) && (ssdscan_clk[0])));   // when ssdscan_clk = 001
-	assign An2  = !(~(ssdscan_clk[2]) &&  (ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 010
-	assign An3  = !(~(ssdscan_clk[2]) &&  (ssdscan_clk[1]) &&  (ssdscan_clk[0]));  // when ssdscan_clk = 011
-	assign An4  = !( (ssdscan_clk[2]) && ~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 100
+    assign An0  = !(~(ssdscan_clk[2]) && (~(ssdscan_clk[1]) && ~(ssdscan_clk[0])));   // when ssdscan_clk = 000
+	assign An1  = !(~(ssdscan_clk[2]) && (~(ssdscan_clk[1]) && (ssdscan_clk[0])));    // when ssdscan_clk = 001
+	assign An2  = !(~(ssdscan_clk[2]) &&  (ssdscan_clk[1]) && ~(ssdscan_clk[0]));     // when ssdscan_clk = 010
+	assign An3  = !(~(ssdscan_clk[2]) &&  (ssdscan_clk[1]) &&  (ssdscan_clk[0]));     // when ssdscan_clk = 011
+	assign An4  = !( (ssdscan_clk[2]) && ~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));     // when ssdscan_clk = 100
 
     // Turn off another 3 anodes
     assign {An7, An6, An5} = 3'b111;
 	
-
 	// SSD controller
     always @ (ssdscan_clk, SSD0)
     begin : SSD_SCAN_OUT

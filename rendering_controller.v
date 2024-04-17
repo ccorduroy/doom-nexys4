@@ -2,7 +2,7 @@
 
 module rendering_controller(
     input clk,
-    input slow_clk,
+    //input slow_clk,
     input start,
     input camera_view,
     input weapon_state,
@@ -41,13 +41,13 @@ module rendering_controller(
     titlescreen_rom d0(.clk(clk),.row(ypos),.col(xpos),.color_data(titlescreen));
 
     // background for each position
-    bgf_rom d1(.clk(clk),.row(vCount-yPos),.col(hCount-xPos),.color_data(bgf));	// front
-    bgr_rom d2(.clk(clk),.row(vCount-yPos),.col(hCount-xPos),.color_data(bgr));	// right
-    bgl_rom d3(.clk(clk),.row(vCount-yPos),.col(hCount-xPos),.color_data(bgl));	// left
+    bgf_rom d1(.clk(clk),.row(vCount-250),.col(hCount-70),.color_data(bgf));	// front
+    bgr_rom d2(.clk(clk),.row(vCount-250),.col(hCount-70),.color_data(bgr));	// right
+    bgl_rom d3(.clk(clk),.row(vCount-250),.col(hCount-70),.color_data(bgl));	// left
     // gun (static)
-    shotgun_rom d4(.clk(clk),.row(vCount-yPos),.col(hCount-xPos),.color_data(shotgun));
+    shotgun_rom d4(.clk(clk),.row(vCount-150),.col(hCount-300),.color_data(shotgun));
     // gun (shooting) - 2 frames
-    shoot1_rom d5(.clk(clk),.row(vCount-yPos),.col(hCount-xPos),.color_data(shoot1));
+    shoot1_rom d5(.clk(clk),.row(vCount-150),.col(hCount-300),.color_data(shoot1));
     //shoot2_rom d6(.clk(clk),.row(vCount-300),.col(hCount-320),.color_data(shoot2));
     // gun (reloading) - 4 frames - not yet implemented in gun SM
     //reload_rom_1 r1(.clk(clk),.color_data(reload1));
@@ -55,7 +55,7 @@ module rendering_controller(
     //reload_rom_3 r3(.clk(clk),.color_data(reload3));
     //reload_rom_4 r4(.clk(clk),.color_data(reload4));
     // enemies
-    enemy_rom d7(.clk(clk),.row(vCount-yPos),.col(hCount-xPos),.color_data(enemy));
+    enemy_rom d7(.clk(clk),.row(vCount-200),.col(hCount-350),.color_data(enemy));
 
     //------------------------------------------------------------------------
     // gif timer
@@ -70,6 +70,22 @@ module rendering_controller(
             // since max number is 15, we can't use %3, lest 0 and 15 have the same output.
             // luckily, the gifs in this format are never 3 frames long.
     end*/
+
+    //------------------------------------------------------------------------
+    // render image at correct location based on source ROM size
+    // loads in pixels from top left to bottom right of the sprite
+    // used in SM to limit rendering to area of source image
+
+    // images should only load when display scan pixel is at the right coords.
+    // title screen: 256x128
+    assign titlescreen_fill = (vCount >= (ypos)) && (vCount <= (ypos+127)) && (hCount >= (xpos+1)) && (hCount <= (xpos+255));
+    // bg (all angles): wh: 256x160
+    assign bg_fill = (vCount >= (ypos)) && (vCount <= (ypos+159)) && (hCount >= (xpos+1)) && (hCount <= (xpos+255));
+    // shotgun and shoot (all frames): 67x62
+    assign shotgun_fill = (vCount >= (ypos)) && (vCount <= (ypos+61)) && (hCount >= (xpos+1)) && (hCount <= (xpos+66));
+    // enemy: 50x69
+    assign enemy_fill = (vCount >= (ypos)) && (vCount <= (ypos+68)) && (hCount >= (xpos+1)) && (hCount <= (xpos+49));
+
 
     //------------------------------------------------------------------------
     //--- MASTER RENDERING STATE MACHINE - WITH PRIORITY ---
@@ -131,24 +147,9 @@ module rendering_controller(
                     rgb = enemy;
 
                 // PRIO 3: background (directional)
-            else if(camera_view == 3'b001) rgb = bg_f;
-            else if(camera_view == 3'b110) rgb = bg_r;
-            else if(camera_view == 3'b011) rgb = bg_l;
+            else if(bg_fill && (camera_view == 3'b001)) rgb = bg_f;
+            else if(bg_fill && (camera_view == 3'b110)) rgb = bg_r;
+            else if(bg_fill && (camera_view == 3'b011)) rgb = bg_l;
         end
 
-    //------------------------------------------------------------------------
-    // render image at correct location based on source ROM size
-    // loads in pixels from top left to bottom right of the sprite
-    // used in SM to limit rendering to area of source image
-
-    // TODO: images should only load when display scan pixel is at the right coords.
-    // title screen: 256x128
-    assign titlescreen_fill = (vCount >= (ypos)) && (vCount <= (ypos+127)) && (hCount >= (xpos+1)) && (hCount <= (xpos+255));
-    // bg (all angles): wh: 256x160
-    assign bg_fill = (vCount >= (ypos)) && (vCount <= (ypos+159)) && (hCount >= (xpos+1)) && (hCount <= (xpos+255));
-    // shotgun and shoot (all frames): 67x62
-    assign shotgun_fill = (vCount >= (ypos)) && (vCount <= (ypos+61)) && (hCount >= (xpos+1)) && (hCount <= (xpos+66));
-    // enemy: 50x69
-    assign enemy_fill = (vCount >= (ypos)) && (vCount <= (ypos+68)) && (hCount >= (xpos+1)) && (hCount <= (xpos+49));
-
-endmodule : rendering_controller
+endmodule

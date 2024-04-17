@@ -7,7 +7,8 @@ module display_controller(
     output hSync, vSync,
     output reg bright,
     output reg[9:0] hCount,
-    output reg [9:0] vCount // Covers 800, width of the screen, because it's 2^10
+    output reg [9:0] vCount, // Covers 800, width of the screen, because it's 2^10
+    output [3:0] vgaR, vgaG, vgaB   // VGA output
 );
 
     reg pulse;
@@ -52,4 +53,4 @@ module display_controller(
                 bright <= 0;
         end
 
-endmodule
+endmodule : display_controller
