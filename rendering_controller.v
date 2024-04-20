@@ -2,10 +2,11 @@
 
 module rendering_controller(
     input clk,
-    //input slow_clk,
+    input fast_clk,
     input start,
-    input camera_view,
+    input [2:0] camera_view,
     input weapon_state,
+    input enemy_state,
     input forward_enemy_flag,
     input right_enemy_flag,
     input left_enemy_flag,
@@ -16,38 +17,43 @@ module rendering_controller(
 );
 
     //------------------------------------------------------------------------
-    // utils
-    reg [3:0] clk_counter;  // slowclock counter for gif frames - max 15 = 5sec
-
-    // wires: rgb color data
-    wire [11:0] titlescreen;
+    // colors for rom instantiation
+    /*wire [11:0] titlescreen;
     wire [11:0] bgf;
     wire [11:0] bgr;
     wire [11:0] bgl;
     wire [11:0] shotgun;
     wire [11:0] shoot1;
     wire [11:0] shoot2;
-    wire [11:0] enemy;
-    //wire [11:0] reload1;
-    //wire [11:0] reload2;
-    //wire [11:0] reload3;
-    //wire [11:0] reload4;
+    wire [11:0] enemy;*/
+
+    // debug
+    parameter RED   = 12'b1000_0000_0000;
+    parameter BLACK = 12'b0000_0000_0000;
+    parameter WHITE = 12'b1111_1111_1111;
+    parameter GREEN = 12'b0000_1000_0000;
+    parameter BLUE = 12'b0000_0000_1000;
+
+    // state enumaerations for camera control (easier to read)
+    localparam Forward = 3'b001, FtoL = 3'b010, Left = 3'b011, LtoF = 3'b100, FtoR = 3'b101, Right = 3'b110, RtoF = 3'b111, UNK = 3'bXXX;
 
     //------------------------------------------------------------------------
-    // rom instantiation TODO
-    // params: clock, row, column, color_data
     // all of these images have static coordinates!
-    // xpos, ypos = top left corner
-    titlescreen_rom d0(.clk(clk),.row(ypos),.col(xpos),.color_data(titlescreen));
+    // xpos, ypos = top left corner of sprite
+    // rough center of the screen: x = 450 y = 250
+    // visible pixels: x[144, 783] y[35, 515]
+    // rom d(.clk(clk),.row(vCount-ypos),.col(hCount-xpos),.color_data(wire data));
+
+    //**titlescreen_rom d0(.clk(clk),.row(vCount-186),.col(hCount-322),.color_data(titlescreen));
 
     // background for each position
-    bgf_rom d1(.clk(clk),.row(vCount-250),.col(hCount-70),.color_data(bgf));	// front
-    bgr_rom d2(.clk(clk),.row(vCount-250),.col(hCount-70),.color_data(bgr));	// right
-    bgl_rom d3(.clk(clk),.row(vCount-250),.col(hCount-70),.color_data(bgl));	// left
+    //**bgf_rom d1(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgf));	// front
+    //**bgr_rom d2(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgr));	// right
+    //**bgl_rom d3(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgl));	// left
     // gun (static)
-    shotgun_rom d4(.clk(clk),.row(vCount-150),.col(hCount-300),.color_data(shotgun));
+    //**shotgun_rom d4(.clk(clk),.row(vCount-152),.col(hCount-416),.color_data(shotgun));
     // gun (shooting) - 2 frames
-    shoot1_rom d5(.clk(clk),.row(vCount-150),.col(hCount-300),.color_data(shoot1));
+    //**shoot1_rom d5(.clk(clk),.row(vCount-152),.col(hCount-416),.color_data(shoot1));
     //shoot2_rom d6(.clk(clk),.row(vCount-300),.col(hCount-320),.color_data(shoot2));
     // gun (reloading) - 4 frames - not yet implemented in gun SM
     //reload_rom_1 r1(.clk(clk),.color_data(reload1));
@@ -55,37 +61,7 @@ module rendering_controller(
     //reload_rom_3 r3(.clk(clk),.color_data(reload3));
     //reload_rom_4 r4(.clk(clk),.color_data(reload4));
     // enemies
-    enemy_rom d7(.clk(clk),.row(vCount-200),.col(hCount-350),.color_data(enemy));
-
-    //------------------------------------------------------------------------
-    // gif timer
-    /*always @ (posedge clk)
-    begin : GIF_TIMER
-        if(reset)
-            clk_counter <= 0;
-        else
-            clk_counter <= clk_counter + 1'b1;
-            // this number will rollback to 0 every ~5 seconds.
-            // this is fine. we will use modulus of the # of frames/
-            // since max number is 15, we can't use %3, lest 0 and 15 have the same output.
-            // luckily, the gifs in this format are never 3 frames long.
-    end*/
-
-    //------------------------------------------------------------------------
-    // render image at correct location based on source ROM size
-    // loads in pixels from top left to bottom right of the sprite
-    // used in SM to limit rendering to area of source image
-
-    // images should only load when display scan pixel is at the right coords.
-    // title screen: 256x128
-    assign titlescreen_fill = (vCount >= (ypos)) && (vCount <= (ypos+127)) && (hCount >= (xpos+1)) && (hCount <= (xpos+255));
-    // bg (all angles): wh: 256x160
-    assign bg_fill = (vCount >= (ypos)) && (vCount <= (ypos+159)) && (hCount >= (xpos+1)) && (hCount <= (xpos+255));
-    // shotgun and shoot (all frames): 67x62
-    assign shotgun_fill = (vCount >= (ypos)) && (vCount <= (ypos+61)) && (hCount >= (xpos+1)) && (hCount <= (xpos+66));
-    // enemy: 50x69
-    assign enemy_fill = (vCount >= (ypos)) && (vCount <= (ypos+68)) && (hCount >= (xpos+1)) && (hCount <= (xpos+49));
-
+    /**enemy_rom d7(.clk(clk),.row(vCount-250),.col(hCount-425),.color_data(enemy));
 
     //------------------------------------------------------------------------
     //--- MASTER RENDERING STATE MACHINE - WITH PRIORITY ---
@@ -114,42 +90,57 @@ module rendering_controller(
     if(~bright) statement, as this ensures the monitor will output some data to every pixel
     and not just the images you are trying to display. */
 
-    always @*
-        begin
+    // always @*
+    always @ (*)
+        begin: RENDER_SM
             // force black if out of screen
             if(~bright)
-                rgb = 12'b000000000000;
+                rgb = BLACK;
 
                 // PRIO 0: start menu (should disappear once the game begins)
                 // controlled by enemy SM - when enemies are not actively spawning, hold title screen.
-                // enemy state machine changes to running when start button is pressed, so this works??
-            else if(titlescreen_fill && (enemy_state == 3'b001))
-                    rgb = titlescreen;
+            else if((enemy_state == 3'b001))    // TODO : titlescreen_fill &&
+                //rgb = titlescreen;
+                rgb = WHITE;
 
                 // PRIO 1a: gun idle (overwrites shoot ani  if shooting period over)
-            else if(shotgun_fill && (weapon_state == 3'b001))
-                begin
-                    rgb = shotgun;
-                end
+            //else if(shotgun_fill && (weapon_state == 3'b001))
+                //rgb = shotgun;
+                //rgb = BLACK;
+
                 // PRIO 1b: shoot
-            else if(shotgun_fill && ((weapon_state == 3'b010) || (weapon_state == 3'b100)))
-                begin
-                    // sequence?? run gif and then change behavior.
-                    rgb = shoot1;
-                    //rgb = shoot2;
-                end
+            //else if(shotgun_fill && ~(weapon_state == 3'b001))
+                // sequence?? run gif and then change behavior.
+                //rgb = shoot1;
+                //rgb = BLACK;
 
-                // PRIO 2: enemy
-            else if(enemy_fill && (
-                ((camera_view == 3'b001) && forward_enemy_flag == 1)
-                || ((camera_view == 3'b110) && right_enemy_flag == 1)
-                || ((camera_view == 3'b011) && left_enemy_flag == 1))) // if enemy is present and player is facing it
-                    rgb = enemy;
+                // PRIO 2: enemy TODO: enemy_fill &&
+            else if((camera_view == Forward) && forward_enemy_flag == 1) rgb = WHITE;
+            else if((camera_view == Right) && right_enemy_flag == 1) rgb = WHITE;
+            else if((camera_view == Left) && left_enemy_flag == 1) rgb = WHITE;
 
-                // PRIO 3: background (directional)
-            else if(bg_fill && (camera_view == 3'b001)) rgb = bg_f;
-            else if(bg_fill && (camera_view == 3'b110)) rgb = bg_r;
-            else if(bg_fill && (camera_view == 3'b011)) rgb = bg_l;
+                // PRIO 3: background (directional) TODO: bg_fill &&
+            else if((camera_view == Forward)) rgb = RED;     // forward
+            else if((camera_view == Right)) rgb = GREEN;   // right
+            else if((camera_view == Left)) rgb = BLUE;    // left
+
+            else rgb = BLACK;
         end
 
-endmodule
+    // --------------------------------------------------------------------
+    // assign block_fill = vCount>=(ypos) && vCount<=(ypos+height) && hCount>=(xpos) && hCount<=(xpos+width);
+    // screen size: 900 x 500
+    // rough center of the screen: x = 450 y = 250
+    // visible pixels: x[144, 783] y[35, 515]
+
+    // TODO: not working
+    // title screen: 256x128 at (322, 186)
+    assign titlescreen_fill = (vCount>=(186)) && (vCount<=(186+127)) && (hCount>=(322+1)) && (hCount<=(322+255));
+    // bg (all angles): wh: 256x160 at (322, 170)
+    assign bg_fill = (vCount>=(170)) && (vCount<=(170+159)) && (hCount>=(322+1)) && (hCount<=(322+255));
+    // shotgun and shoot (all frames): 67x62 at (416, 152)
+    assign shotgun_fill = (vCount>=(152)) && (vCount<=(152+61)) && (hCount>=(416+1)) && (hCount<=(416+66));
+    // enemy: 50x69 at (425, 250)
+    assign enemy_fill = (vCount>=(250)) && (vCount<=(250+68)) && (hCount>=(425+1)) && (hCount<=(425+49));
+
+endmodule : rendering_controller

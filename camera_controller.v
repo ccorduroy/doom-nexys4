@@ -6,16 +6,12 @@
 
 module camera_controller(
     input clk,
-    //input bright,
+    input fast_clk,
     input rst,
     input leftB,
 	input rightB,
-    //output reg [11:0] rgb,
-    //output reg [11:0] background,
 	output reg [2:0] camera_view
     //input start,
-	
-	
    );
     
     
@@ -25,13 +21,13 @@ module camera_controller(
 
     
    
-    always@(posedge clk, posedge rst) 
+    always@(posedge fast_clk, posedge rst)
     begin: Camera_Control_SM
         if(rst)
         begin 
             camera_view <= Forward;
         end
-        else if (clk) 
+        else if (fast_clk)
             case(camera_view)
                 Forward:
                     begin

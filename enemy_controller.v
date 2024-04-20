@@ -64,7 +64,7 @@ module enemy_controller(
 	reg [1:0] right_enemy_health = 2'b00;
 	
    
-    always@(posedge slow_clk, posedge rst) 
+    always@(posedge slow_clk, posedge rst)
     begin: Enemy_Control_SM
         if(rst)
         begin 

@@ -26,13 +26,17 @@ module Doom_top(
 	// Can comment these out when using testbench
     output MemOE, MemWR, RamCS,
     output QuadSpiFlashCS,
-	output hSync, vSync,
-	output [3:0] vgaR, vgaG, vgaB
+	output Hsync, Vsync,
+	output [3:0] vgaRed, vgaGreen, vgaBlue
 	
 	// Only use this for testbench purposes
 	//output wire[2:0] camera_view
     );
-	
+
+	// VGA RGB assignments
+	assign vgaRed = rgb[11 : 8];
+	assign vgaGreen = rgb[7  : 4];
+	assign vgaBlue = rgb[3  : 0];
 	
 	assign {MemOE, MemWR, RamCS, QuadSpiFlashCS} = 4'b1111;
 	
@@ -76,12 +80,12 @@ module Doom_top(
 	// This variable will be active for one clock to indicate that an enemy from any direction has attacked the player
 	wire enemy_attack;
 	
-	
-	
 	// This slow clock is roughly 100Hz and is used for enemy timers
 	reg [27:0]  DIV_CLK;
 	assign slow_clk = DIV_CLK[19];
-	
+	assign fast_clk = DIV_CLK[5];	// VERY FAST screen writing clock signal
+
+	// --------------------------------------------------
 	
     always @ (posedge ClkPort, posedge Reset)  
     begin : CLOCK_DIVIDER
@@ -89,11 +93,15 @@ module Doom_top(
             DIV_CLK <= 0;
       else
             DIV_CLK <= DIV_CLK + 1'b1;
-    end
+    end : CLOCK_DIVIDER
 
-	// other relevant files and their referenced variables
+	// --------------------------------------------------
+
+
+	// IO connections
 	camera_controller sc(
 		.clk(ClkPort),
+		.fast_clk(fast_clk),
 		.rst(BtnC),
 		.leftB(BtnL),
 		.rightB(BtnR),
@@ -123,8 +131,8 @@ module Doom_top(
 
 	rendering_controller sc3(
 		.clk(ClkPort),
+		.fast_clk(fast_clk),
 		.start(start),
-		//.slow_clk(slow_clk),
 		.camera_view(camera_view),
 		.weapon_state(weapon_state),
 		.enemy_state(enemy_state),
@@ -134,18 +142,17 @@ module Doom_top(
 		.bright(bright),
 		.hCount(hCount),
 		.vCount(vCount),
-		.rgb(rgb),
+		.rgb(rgb)
 	);
 
 	display_controller sc4(
 		.clk(ClkPort),
-		.rgb(rgb),
+		.Hsync(Hsync),
+		.Vsync(Vsync),
+		.bright(bright),
+		.hCount(hCount),
+		.vCount(vCount)
 	);
-	
-	// VGA RGB assignments
-    assign vgaR = rgb[11 : 8];
-    assign vgaG = rgb[7  : 4];
-    assign vgaB = rgb[3  : 0];
     
     // disable mamory ports
     assign {MemOE, MemWR, RamCS, QuadSpiFlashCS} = 4'b1111;
@@ -197,7 +204,7 @@ module Doom_top(
 
     // Turn off another 3 anodes
     assign {An7, An6, An5} = 3'b111;
-	
+
 	// SSD controller
     always @ (ssdscan_clk, SSD0)
     begin : SSD_SCAN_OUT

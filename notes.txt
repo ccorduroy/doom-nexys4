@@ -1,21 +1,47 @@
 PMOD 0 => micro SD card + adapter
 PMOD 1, 2 => DVI connector
 
---- STEP 1: BUILD THE BOARD ---
-1. CLOCK
-- Add HDMI and HDMI 5x clock domain
-- instantiate MMCM
-    buf divide by 4 to get sys_clk
-    two clocks output:
-    HDMI: 25MHz
-    HDMI 5x: 125MHz
+***ALL NUMBERS IN WIDTHxHEIGHT FORMAT
+                     X x Y
 
-2. add extension: DVI connection
-- _dvi_pmod_io instantiated using 2 pmod ports
-- clock domain: HDMI
-- add a frame buffer
-    640x480 @75Hz
-    match res and freq of target. doom software has these kind of hard-coded in
+flipping motion
+    newdino_rom dd(.clk(mast_Clk),.row(moveleft ? vCount-ypos+fs : vCount-ypos+fs),.col(moveleft ? hCount-xpos: 38 - hCount+xpos),.color_data(pinkdino1));
+standard motion
+    asteriodL_rom rom7(.clk(mast_Clk),.row(vCount-yLpos2),.col(hCount-xLpos2),.color_data(asteroidL2));
 
---- STEP 2: BUILD THE SW ---
+----------------------------------------------------
 
+static rendering location
+    700x525 rendered at (70, 250)
+    landscape_rom rom8(.clk(mast_Clk),.row(vCount-250),.col(hCount-70),.color_data(landscape));
+
+    352x95 rendered at (450, 250)
+    titlescreen_rom romT(.clk(mast_Clk),.row(vCount-150),.col(hCount-450),.color_data(titleScreen));
+
+    ?
+    playersScreen_rom romP(.clk(mast_Clk),.row(vCount-150),.col(hCount-460),.color_data(playerScreen));
+
+====================================================
+
+standard motion
+    assign rockL2=vCount>=(yLpos2) && vCount<=(yLpos2+101) && hCount>=(xLpos2+1) && hCount<=(xLpos2+131);
+
+----------------------------------------------------
+
+static rendering location
+    700x525 rendered at (0, 470)
+    assign bkg=vCount>=(470) && vCount<=(470+95) && hCount>=(0) && hCount<=(700);
+
+    352x95 rendered at (450, 250)
+    assign title=vCount>=(250) && vCount<=(250+95) && hCount>=(450+1) && hCount<=(450+353);
+
+    ?
+    assign ps = vCount>=(150) && vCount<=(150+95) && hCount>=(460+1) && hCount<=(460+353);
+
+=====================================================
+MY NUMBERS:
+screen center: (450, 250)
+title screen: (450-128,250-64) => (322, 186) 256x128
+bg: (450-128, 250-80) => (322, 170) 256x160
+shotgun, shoot: (450-34, 250-160+62) => (416, 152) 67x62
+enemy: (450-25, 250) => (425, 250) 50x69

@@ -2,13 +2,14 @@
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 
+// DISPLAY UTILITY - DON'T TOUCH!
+
 module display_controller(
     input clk,
-    output hSync, vSync,
+    output Hsync, Vsync,
     output reg bright,
     output reg[9:0] hCount,
-    output reg [9:0] vCount, // Covers 800, width of the screen, because it's 2^10
-    output [3:0] vgaR, vgaG, vgaB   // VGA output
+    output reg [9:0] vCount // Covers 800, width of the screen, because it's 2^10
 );
 
     reg pulse;
@@ -42,8 +43,8 @@ module display_controller(
                 end
         end
 
-    assign hSync = (hCount < 96) ? 0:1;
-    assign vSync = (vCount < 2) ? 0:1;
+    assign Hsync = (hCount < 96) ? 0:1;
+    assign Vsync = (vCount < 2) ? 0:1;
 
     always @(posedge clk25)
         begin
