@@ -54,4 +54,4 @@ module display_controller(
                 bright <= 0;
         end
 
-endmodule : display_controller
+endmodule

@@ -11,21 +11,27 @@ module rendering_controller(
     input right_enemy_flag,
     input left_enemy_flag,
     input bright,
-    input [9:0] vCount,
-    input [9:0] hCount,
-    output reg[11:0] rgb
+    input [9:0] vCount, hCount,
+    output reg [11:0] rgb
 );
 
     //------------------------------------------------------------------------
     // colors for rom instantiation
-    /*wire [11:0] titlescreen;
+    wire [11:0] titlescreen;
     wire [11:0] bgf;
     wire [11:0] bgr;
     wire [11:0] bgl;
     wire [11:0] shotgun;
     wire [11:0] shoot1;
     wire [11:0] shoot2;
-    wire [11:0] enemy;*/
+    wire [11:0] enemy;
+
+    // fill limiter instantiation
+    //wire temp_fill;
+    wire bg_fill;
+    wire shotgun_fill;
+    wire titlescreen_fill;
+    wire enemy_fill;
 
     // debug
     parameter RED   = 12'b1000_0000_0000;
@@ -44,7 +50,7 @@ module rendering_controller(
     // visible pixels: x[144, 783] y[35, 515]
     // rom d(.clk(clk),.row(vCount-ypos),.col(hCount-xpos),.color_data(wire data));
 
-    //**titlescreen_rom d0(.clk(clk),.row(vCount-186),.col(hCount-322),.color_data(titlescreen));
+    titlescreen_rom d0(.clk(clk),.row(vCount-186),.col(hCount-322),.color_data(titlescreen));
 
     // background for each position
     //**bgf_rom d1(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgf));	// front
@@ -99,30 +105,30 @@ module rendering_controller(
 
                 // PRIO 0: start menu (should disappear once the game begins)
                 // controlled by enemy SM - when enemies are not actively spawning, hold title screen.
-            else if((enemy_state == 3'b001))    // TODO : titlescreen_fill &&
-                //rgb = titlescreen;
-                rgb = WHITE;
+            else if(titlescreen_fill && (enemy_state == 3'b001))    // TODO : titlescreen_fill &&
+                rgb = titlescreen;
+                //rgb = WHITE;
 
                 // PRIO 1a: gun idle (overwrites shoot ani  if shooting period over)
-            //else if(shotgun_fill && (weapon_state == 3'b001))
+            else if(shotgun_fill && (weapon_state == 3'b001))
                 //rgb = shotgun;
-                //rgb = BLACK;
+                rgb = BLACK;
 
                 // PRIO 1b: shoot
-            //else if(shotgun_fill && ~(weapon_state == 3'b001))
+            else if(shotgun_fill && ~(weapon_state == 3'b001))
                 // sequence?? run gif and then change behavior.
                 //rgb = shoot1;
-                //rgb = BLACK;
+                rgb = BLACK;
 
                 // PRIO 2: enemy TODO: enemy_fill &&
-            else if((camera_view == Forward) && forward_enemy_flag == 1) rgb = WHITE;
-            else if((camera_view == Right) && right_enemy_flag == 1) rgb = WHITE;
-            else if((camera_view == Left) && left_enemy_flag == 1) rgb = WHITE;
+            else if(enemy_fill && (camera_view == Forward) && (forward_enemy_flag == 1)) rgb = WHITE;
+            else if(enemy_fill && (camera_view == Right) && (right_enemy_flag == 1)) rgb = WHITE;
+            else if(enemy_fill && (camera_view == Left) && (left_enemy_flag == 1)) rgb = WHITE;
 
                 // PRIO 3: background (directional) TODO: bg_fill &&
-            else if((camera_view == Forward)) rgb = RED;     // forward
-            else if((camera_view == Right)) rgb = GREEN;   // right
-            else if((camera_view == Left)) rgb = BLUE;    // left
+            else if(bg_fill && (camera_view == Forward)) rgb = RED;     // forward
+            else if(bg_fill && (camera_view == Right)) rgb = GREEN;   // right
+            else if(bg_fill && (camera_view == Left)) rgb = BLUE;    // left
 
             else rgb = BLACK;
         end
@@ -133,14 +139,15 @@ module rendering_controller(
     // rough center of the screen: x = 450 y = 250
     // visible pixels: x[144, 783] y[35, 515]
 
-    // TODO: not working
+    // note: hcount and vcount weren't connected to display controller! now they are
     // title screen: 256x128 at (322, 186)
+    //assign temp_fill=vCount>=(450-25) && vCount<=(450+25) && hCount>=(450-25) && hCount<=(450+25);
     assign titlescreen_fill = (vCount>=(186)) && (vCount<=(186+127)) && (hCount>=(322+1)) && (hCount<=(322+255));
     // bg (all angles): wh: 256x160 at (322, 170)
     assign bg_fill = (vCount>=(170)) && (vCount<=(170+159)) && (hCount>=(322+1)) && (hCount<=(322+255));
     // shotgun and shoot (all frames): 67x62 at (416, 152)
-    assign shotgun_fill = (vCount>=(152)) && (vCount<=(152+61)) && (hCount>=(416+1)) && (hCount<=(416+66));
+    assign shotgun_fill = (vCount>=(280)) && (vCount<=(280+61)) && (hCount>=(416+1)) && (hCount<=(416+66));
     // enemy: 50x69 at (425, 250)
-    assign enemy_fill = (vCount>=(250)) && (vCount<=(250+68)) && (hCount>=(425+1)) && (hCount<=(425+49));
+    assign enemy_fill = (vCount>=(220)) && (vCount<=(220+68)) && (hCount>=(425+1)) && (hCount<=(425+49));
 
 endmodule : rendering_controller

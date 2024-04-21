@@ -14,9 +14,6 @@ module Doom_top(
 	input BtnD,
 	// Adds all switches as inputs just in case we want to use them and Vivado won't yell at us
     input Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0,
-    //VGA signal
-    //output hSync, vSync,
-    //output [3:0] vgaR, vgaG, vgaB,
     
     //SSG signal 
     output An0, An1, An2, An3, An4, An5, An6, An7,
@@ -26,12 +23,19 @@ module Doom_top(
 	// Can comment these out when using testbench
     output MemOE, MemWR, RamCS,
     output QuadSpiFlashCS,
+
+	// VGA signal
 	output Hsync, Vsync,
 	output [3:0] vgaRed, vgaGreen, vgaBlue
 	
 	// Only use this for testbench purposes
 	//output wire[2:0] camera_view
     );
+
+	// VGA control variables
+	wire [11:0] rgb;
+	wire [9:0] hc, vc;
+	wire bright;
 
 	// VGA RGB assignments
 	assign vgaRed = rgb[11 : 8];
@@ -48,9 +52,6 @@ module Doom_top(
 	assign start = BtnD;
     
     reg [2:0]   SSD;
-
-	// VGA control variables
-	wire [11:0] rgb;
 	
 	// SSD0 shows the camera state (forward, left, right)
 	// SSD4 shows the weapon state (loaded or empty)
@@ -140,8 +141,8 @@ module Doom_top(
 		.left_enemy_flag(left_enemy_flag),
 		.right_enemy_flag(right_enemy_flag),
 		.bright(bright),
-		.hCount(hCount),
-		.vCount(vCount),
+		.hCount(hc),
+		.vCount(vc),
 		.rgb(rgb)
 	);
 
@@ -150,8 +151,8 @@ module Doom_top(
 		.Hsync(Hsync),
 		.Vsync(Vsync),
 		.bright(bright),
-		.hCount(hCount),
-		.vCount(vCount)
+		.hCount(hc),
+		.vCount(vc)
 	);
     
     // disable mamory ports
