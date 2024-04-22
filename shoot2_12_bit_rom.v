@@ -1,4 +1,4 @@
-module reload2_rom
+module shoot2_rom
 	(
 		input wire clk,
 		input wire [6:0] row,

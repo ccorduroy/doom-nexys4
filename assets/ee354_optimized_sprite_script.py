@@ -103,7 +103,4 @@ def generate(name, rem_x=-1, rem_y=-1):
     rom_12_bit(name, im)
 
 # generate rom from full bitmap image
-generate("bgf.png")
-generate("bgl.png")
-generate("bgr.png")
-generate("reload2.png")
+generate("shoot2.png")

@@ -23,7 +23,6 @@ module rendering_controller(
     wire [11:0] bgl;
     wire [11:0] shotgun;
     wire [11:0] shoot1;
-    wire [11:0] shoot2;
     wire [11:0] enemy;
 
     // fill limiter instantiation
@@ -53,21 +52,20 @@ module rendering_controller(
     titlescreen_rom d0(.clk(clk),.row(vCount-186),.col(hCount-322),.color_data(titlescreen));
 
     // background for each position
-    //**bgf_rom d1(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgf));	// front
-    //**bgr_rom d2(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgr));	// right
-    //**bgl_rom d3(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgl));	// left
+    bgf_rom d1(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgf));	// front
+    //bgr_rom d2(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgr));	// right
+    //bgl_rom d3(.clk(clk),.row(vCount-170),.col(hCount-322),.color_data(bgl));	// left
     // gun (static)
-    //**shotgun_rom d4(.clk(clk),.row(vCount-152),.col(hCount-416),.color_data(shotgun));
+    shotgun_rom d4(.clk(clk),.row(vCount-152),.col(hCount-416),.color_data(shotgun));
     // gun (shooting) - 2 frames
-    //**shoot1_rom d5(.clk(clk),.row(vCount-152),.col(hCount-416),.color_data(shoot1));
-    //shoot2_rom d6(.clk(clk),.row(vCount-300),.col(hCount-320),.color_data(shoot2));
+    shoot1_rom d5(.clk(clk),.row(vCount-152),.col(hCount-416),.color_data(shoot1));
     // gun (reloading) - 4 frames - not yet implemented in gun SM
     //reload_rom_1 r1(.clk(clk),.color_data(reload1));
     //reload_rom_2 r2(.clk(clk),.color_data(reload2));
     //reload_rom_3 r3(.clk(clk),.color_data(reload3));
     //reload_rom_4 r4(.clk(clk),.color_data(reload4));
     // enemies
-    /**enemy_rom d7(.clk(clk),.row(vCount-250),.col(hCount-425),.color_data(enemy));
+    enemy_rom d7(.clk(clk),.row(vCount-250),.col(hCount-425),.color_data(enemy));
 
     //------------------------------------------------------------------------
     //--- MASTER RENDERING STATE MACHINE - WITH PRIORITY ---
@@ -111,24 +109,24 @@ module rendering_controller(
 
                 // PRIO 1a: gun idle (overwrites shoot ani  if shooting period over)
             else if(shotgun_fill && (weapon_state == 3'b001))
-                //rgb = shotgun;
-                rgb = BLACK;
+                rgb = shotgun;
+                //rgb = BLACK;
 
                 // PRIO 1b: shoot
             else if(shotgun_fill && ~(weapon_state == 3'b001))
-                // sequence?? run gif and then change behavior.
-                //rgb = shoot1;
-                rgb = BLACK;
+                // sequence?? run gif and then change behavior?
+                rgb = shoot1;
+                //rgb = BLACK;
 
                 // PRIO 2: enemy TODO: enemy_fill &&
-            else if(enemy_fill && (camera_view == Forward) && (forward_enemy_flag == 1)) rgb = WHITE;
-            else if(enemy_fill && (camera_view == Right) && (right_enemy_flag == 1)) rgb = WHITE;
-            else if(enemy_fill && (camera_view == Left) && (left_enemy_flag == 1)) rgb = WHITE;
+            else if(enemy_fill && (camera_view == Forward) && (forward_enemy_flag == 1)) rgb = enemy;
+            else if(enemy_fill && (camera_view == Right) && (right_enemy_flag == 1)) rgb = enemy;
+            else if(enemy_fill && (camera_view == Left) && (left_enemy_flag == 1)) rgb = enemy;
 
                 // PRIO 3: background (directional) TODO: bg_fill &&
-            else if(bg_fill && (camera_view == Forward)) rgb = RED;     // forward
-            else if(bg_fill && (camera_view == Right)) rgb = GREEN;   // right
-            else if(bg_fill && (camera_view == Left)) rgb = BLUE;    // left
+            else if(bg_fill && (camera_view == Forward)) rgb = bgf;     // forward
+            else if(bg_fill && (camera_view == Right)) rgb = bgf;   // right
+            else if(bg_fill && (camera_view == Left)) rgb = bgf;    // left
 
             else rgb = BLACK;
         end
