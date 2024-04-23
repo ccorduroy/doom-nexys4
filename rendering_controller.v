@@ -103,27 +103,26 @@ module rendering_controller(
 
                 // PRIO 0: start menu (should disappear once the game begins)
                 // controlled by enemy SM - when enemies are not actively spawning, hold title screen.
-            else if(titlescreen_fill && (enemy_state == 3'b001))    // TODO : titlescreen_fill &&
+            else if(titlescreen_fill && (enemy_state == 3'b001))
                 rgb = titlescreen;
                 //rgb = WHITE;
 
                 // PRIO 1a: gun idle (overwrites shoot ani  if shooting period over)
-            else if(shotgun_fill && (weapon_state == 3'b001))
+            else if((shotgun_fill) && (rgb != BLACK) && ~(weapon_state == 3'b001))
                 rgb = shotgun;
                 //rgb = BLACK;
 
                 // PRIO 1b: shoot
-            else if(shotgun_fill && ~(weapon_state == 3'b001))
-                // sequence?? run gif and then change behavior?
+            else if((shotgun_fill) && (rgb != BLACK) && (weapon_state == 3'b001))
                 rgb = shoot1;
                 //rgb = BLACK;
 
-                // PRIO 2: enemy TODO: enemy_fill &&
-            else if(enemy_fill && (camera_view == Forward) && (forward_enemy_flag == 1)) rgb = enemy;
-            else if(enemy_fill && (camera_view == Right) && (right_enemy_flag == 1)) rgb = enemy;
-            else if(enemy_fill && (camera_view == Left) && (left_enemy_flag == 1)) rgb = enemy;
+                // PRIO 2: enemy
+            else if(enemy_fill && rgb != BLACK && (camera_view == Forward) && (forward_enemy_flag == 1)) rgb = enemy;
+            else if(enemy_fill && rgb != BLACK && (camera_view == Right) && (right_enemy_flag == 1)) rgb = enemy;
+            else if(enemy_fill && rgb != BLACK && (camera_view == Left) && (left_enemy_flag == 1)) rgb = enemy;
 
-                // PRIO 3: background (directional) TODO: bg_fill &&
+                // PRIO 3: background (directional)
             else if(bg_fill && (camera_view == Forward)) rgb = bgf;     // forward
             else if(bg_fill && (camera_view == Right)) rgb = bgf;   // right
             else if(bg_fill && (camera_view == Left)) rgb = bgf;    // left
